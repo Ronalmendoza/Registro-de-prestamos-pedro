@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Préstamos</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: url('https://www.shutterstock.com/search/money-bundle?searchterm=fajo+de+dinero&sort=best') no-repeat center center fixed;
+            background-size: cover;
+            color: #333;
+        }
+        .container {
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 1000px;
+            text-align: center;
+        }
+        h1 {
+            font-size: 36px;
+            color: #4CAF50;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        .form-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        input, button {
+            padding: 15px;
+            font-size: 18px;
+            border-radius: 8px;
+            border: 2px solid #4CAF50;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+        .loan-card {
+            background-color: #fff;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s ease;
+        }
+        .loan-card:hover {
+            transform: scale(1.05);
+        }
+        .loan-card h3 {
+            color: #333;
+            font-size: 24px;
+            margin-bottom: 15px;
+        }
+        .loan-card input {
+            font-size: 20px;
+            padding: 15px;
+            width: 100%;
+            margin-top: 10px;
+            text-align: center;
+            border: 2px solid #4CAF50;
+            border-radius: 8px;
+            box-sizing: border-box;
+        }
+        .loan-card .currency-icon {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 30px;
+            color: #4CAF50;
+        }
+        .loan-card button {
+            background-color: red;
+            color: white;
+            font-size: 16px;
+            margin-top: 15px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            padding: 10px 20px;
+            width: 100%;
+            transition: background-color 0.3s ease;
+        }
+        .loan-card button:hover {
+            background-color: darkred;
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <div class="container">
+        <h1>Registro de Préstamos - Pedro Prestaciones</h1>
+        <div class="form-container">
+            <input type="text" id="borrower" placeholder="Nombre del prestatario" />
+            <input type="number" id="amount" placeholder="Monto del préstamo" />
+            <button onclick="addLoan()">Agregar Préstamo</button>
+        </div>
+
+        <div class="grid-container" id="loanList">
+            <!-- Aquí se mostrarán los préstamos -->
+        </div>
+    </div>
+
+    <script>
+        // Función para cargar los préstamos desde localStorage
+        function loadLoans() {
+            const storedLoans = JSON.parse(localStorage.getItem("loans")) || [];
+            storedLoans.forEach(loan => {
+                displayLoan(loan.borrower, loan.originalAmount, loan.amount, loan.id);
+            });
+        }
+
+        // Llamamos a loadLoans cuando se carga la página
+        window.onload = loadLoans;
+
+        // Función para agregar un préstamo
+        function addLoan() {
+            const borrower = document.getElementById("borrower").value;
+            const amount = parseFloat(document.getElementById("amount").value);
+
+            if (borrower && !isNaN(amount) && amount > 0) {
+                const loanId = Date.now(); // Usamos la fecha y hora actual para crear un ID único
+
+                // Mostrar el préstamo en la interfaz
+                displayLoan(borrower, amount, amount, loanId);
+
+                // Recuperar los préstamos actuales de localStorage
+                const storedLoans = JSON.parse(localStorage.getItem("loans")) || [];
+
+                // Agregar el nuevo préstamo a la lista
+                storedLoans.push({ id: loanId, borrower, originalAmount: amount, amount });
+
+                // Guardar la lista actualizada en localStorage
+                localStorage.setItem("loans", JSON.stringify(storedLoans));
+
+                // Limpiar los campos
+                document.getElementById("borrower").value = "";
+                document.getElementById("amount").value = "";
+            } else {
+                alert("Por favor, complete ambos campos con información válida.");
+            }
+        }
+
+        // Función para mostrar un préstamo en la interfaz
+        function displayLoan(borrower, originalAmount, amount, id) {
+            const loanList = document.getElementById("loanList");
+
+            const loanCard = document.createElement("div");
+            loanCard.classList.add("loan-card");
+            loanCard.dataset.id = id;
+
+            loanCard.innerHTML = `
+                <div class="currency-icon">💰</div>
+                <h3>${borrower}</h3>
+                <p>Préstamo original: $${originalAmount.toFixed(2)}</p>
+                <input type="number" class="amountInput" placeholder="Monto" value="${amount}" onfocus="this.value=''" oninput="updateAmount(this, ${id}, ${originalAmount})">
+                <button onclick="deleteLoan(${id})">Eliminar Préstamo</button>
+            `;
+
+            loanList.appendChild(loanCard);
+        }
+
+        // Función para actualizar el monto
+        function updateAmount(inputField, loanId, originalAmount) {
+            const loanCards = document.querySelectorAll(".loan-card");
+
+            loanCards.forEach(card => {
+                if (card.dataset.id == loanId) {
+                    let updatedAmount = parseFloat(inputField.value);
+                    if (!isNaN(updatedAmount)) {
+                        card.dataset.amount = updatedAmount;
+
+                        // Actualizar el monto en localStorage
+                        const storedLoans = JSON.parse(localStorage.getItem("loans")) || [];
+                        const loanIndex = storedLoans.findIndex(loan => loan.id === loanId);
+                        if (loanIndex !== -1) {
+                            storedLoans[loanIndex].amount = updatedAmount;
+                            localStorage.setItem("loans", JSON.stringify(storedLoans));
+                        }
+                    } else {
+                        // Si el campo está vacío, restauramos el valor original
+                        card.dataset.amount = originalAmount;
+                        inputField.value = originalAmount;
+                    }
+                }
+            });
+        }
+
+        // Función para eliminar un préstamo
+        function deleteLoan(loanId) {
+            // Eliminar el préstamo de la interfaz
+            const loanCard = document.querySelector(`[data-id='${loanId}']`);
+            loanCard.remove();
+
+            // Eliminar el préstamo de localStorage
+            const storedLoans = JSON.parse(localStorage.getItem("loans")) || [];
+            const updatedLoans = storedLoans.filter(loan => loan.id !== loanId);
+
+            // Guardar los préstamos actualizados en localStorage
+            localStorage.setItem("loans", JSON.stringify(updatedLoans));
+        }
+    </script>
+
+</body>
+</html>
